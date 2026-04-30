@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For you ❤️</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    font-family: Arial, sans-serif;
+    color: white;
+    text-align: center;
+}
+
+/* ENTRADA */
+#start {
+    position: fixed;
+    top: 40%;
+    width: 100%;
+    z-index: 3;
+    animation: fadeIn 2s ease;
+}
+
+/* CONTENIDO */
+#content {
+    display: none;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+}
+
+img {
+    width: 85%;
+    max-width: 320px;
+    border-radius: 20px;
+    margin-top: 40px;
+    box-shadow: 0 0 25px rgba(255,255,255,0.2);
+}
+
+/* BOTÓN LATIDO */
+#revealBtn {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 25px;
+    border: 1px solid white;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border-radius: 10px;
+    z-index: 5;
+    animation: pulse 2s infinite;
+}
+
+/* ANIMACIONES */
+@keyframes pulse {
+    0% {transform: translateX(-50%) scale(1);}
+    50% {transform: translateX(-50%) scale(1.1);}
+    100% {transform: translateX(-50%) scale(1);}
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* TEXTO */
+#text {
+    display: none;
+    margin-top: 30px;
+    font-size: 22px;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    white-space: pre-line;
+    padding-bottom: 120px;
+}
+
+/* MENSAJE FINAL */
+#finalMessage {
+    display: none;
+    font-size: 28px;
+    margin-top: 40px;
+    animation: fadeGlow 3s ease forwards;
+}
+
+@keyframes fadeGlow {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+        text-shadow: 0 0 0px white;
+    }
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 20px white;
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+        text-shadow: 0 0 10px white;
+    }
+}
+
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="stars"></canvas>
+
+<div id="start">
+    <p>✨ Ingresa el código ✨</p>
+    <input type="password" id="pass">
+    <br><br>
+    <button onclick="checkPass()">Entrar</button>
+    <p id="error"></p>
+</div>
+
+<div id="content">
+    <img src="foto.jpg">
+    <button id="revealBtn" onclick="showText()">Presiona aquí ❤️</button>
+    <div id="text"></div>
+    <div id="finalMessage">I Love you Sweeti 👩🏻‍🚀</div>
+</div>
+
+<audio id="music" loop>
+    <source src="musica.mp3" type="audio/mp3">
+</audio>
+
+<script>
+
+// PASSWORD
+function checkPass(){
+    if(document.getElementById("pass").value === "2303"){
+        document.getElementById("start").style.display = "none";
+
+        let content = document.getElementById("content");
+        content.style.display = "block";
+
+        setTimeout(()=> content.style.opacity = "1", 50);
+
+        document.getElementById("music").play();
+        setupAudio();
+
+        if(navigator.vibrate){
+            navigator.vibrate(100);
+        }
+
+    } else {
+        document.getElementById("error").innerText = "Código incorrecto...";
+    }
+}
+
+// AUDIO
+let audioCtx, analyser, dataArray;
+
+function setupAudio(){
+    const audio = document.getElementById("music");
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaElementSource(audio);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 64;
+
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+}
+
+// TEXTO
+function showText(){
+    document.getElementById("revealBtn").style.display = "none";
+    document.getElementById("text").style.display = "block";
+
+    document.getElementById("text").innerHTML =
+    "Eres la calma que rompe mi guerra...\n\n" +
+    "La herida dulce que no quiero cerrar...\n\n" +
+    "Me pierdo en tu voz como en otra tierra…\n\n" +
+    "donde amar también duele…\n" +
+    "y aun así quiero quedar...\n\n" +
+    "Eres fuego y hielo en la misma piel...\n" +
+    "Mi paz y mi caos en una canción...\n\n" +
+    "Y aunque amarte a veces no me haga bien...\n" +
+    "prefiero tu tormenta…\n\n" +
+    "que un mundo sin tu voz...\n\n" +
+    "Happy birthday Swetti 👩🏻‍🚀❤️";
+
+    setTimeout(() => {
+        document.getElementById("finalMessage").style.display = "block";
+    }, 2000);
+}
+
+// ESTRELLAS
+const canvas = document.getElementById("stars");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+let stars = [];
+
+for(let i=0;i<120;i++){
+    stars.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        r: Math.random()*2,
+        speed: 0.3 + Math.random()*0.5
+    });
+}
+
+function getAudioLevel(){
+    if(!analyser) return 0;
+    analyser.getByteFrequencyData(dataArray);
+    return dataArray.reduce((a,b)=>a+b)/dataArray.length/255;
+}
+
+function drawStars(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let level = getAudioLevel();
+
+    stars.forEach(s=>{
+        let size = s.r + level*2;
+
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,size,0,Math.PI*2);
+        ctx.fillStyle = "rgba(255,255,255,"+(0.5+level)+")";
+        ctx.fill();
+
+        s.y += s.speed + level*2;
+
+        if(s.y > canvas.height){
+            s.y = -5;
+            s.x = Math.random()*canvas.width;
+        }
+    });
+
+    requestAnimationFrame(drawStars);
+}
+
+drawStars();
+
+</script>
+
+</body>
+</html>
