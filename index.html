@@ -6,104 +6,107 @@
 <title>For you ❤️</title>
 
 <style>
-body {
-    margin: 0;
-    background: black;
-    font-family: Arial, sans-serif;
-    color: white;
-    text-align: center;
+body{
+    margin:0;
+    background:black;
+    color:white;
+    font-family:Arial, sans-serif;
+    text-align:center;
+    overflow-x:hidden;
 }
 
 /* ENTRADA */
-#start {
-    position: fixed;
-    top: 40%;
-    width: 100%;
-    z-index: 3;
+#start{
+    position:fixed;
+    top:40%;
+    width:100%;
+    z-index:5;
 }
 
 /* CONTENIDO */
-#content {
-    display: none;
-    opacity: 0;
-    transition: opacity 1.5s ease;
+#content{
+    display:none;
+    opacity:0;
+    transition:opacity 1.5s ease;
 }
 
-img {
-    width: 85%;
-    max-width: 320px;
-    border-radius: 20px;
-    margin-top: 40px;
-    box-shadow: 0 0 25px rgba(255,255,255,0.2);
+/* IMAGEN */
+#mainImage{
+    width:85%;
+    max-width:320px;
+    border-radius:20px;
+    margin-top:40px;
+    box-shadow:0 0 25px rgba(255,255,255,0.2);
+    transition:transform 12s ease-out;
+}
+.zoom{
+    transform:scale(1.18);
+}
+
+/* LATIDO */
+.beat{
+    transform:scale(1.22);
+    box-shadow:0 0 40px rgba(255,255,255,0.7);
 }
 
 /* BOTÓN */
-#revealBtn {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 12px 25px;
-    border: 1px solid white;
-    background: rgba(0,0,0,0.6);
-    color: white;
-    border-radius: 10px;
-    z-index: 5;
-    animation: pulse 2s infinite;
+#revealBtn{
+    position:fixed;
+    bottom:30px;
+    left:50%;
+    transform:translateX(-50%);
+    padding:12px 25px;
+    border:1px solid white;
+    background:rgba(0,0,0,0.6);
+    color:white;
+    border-radius:10px;
+    z-index:6;
+    animation:pulse 2s infinite;
 }
-
-@keyframes pulse {
-    0% {transform: translateX(-50%) scale(1);}
-    50% {transform: translateX(-50%) scale(1.1);}
-    100% {transform: translateX(-50%) scale(1);}
+@keyframes pulse{
+    0%{transform:translateX(-50%) scale(1);}
+    50%{transform:translateX(-50%) scale(1.1);}
+    100%{transform:translateX(-50%) scale(1);}
 }
 
 /* TEXTO */
-#text {
-    display: none;
-    margin-top: 30px;
-    font-size: 22px;
-    width: 90%;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: 1.6;
-    padding-bottom: 120px;
+#text{
+    display:none;
+    margin-top:30px;
+    font-size:22px;
+    width:90%;
+    margin:auto;
+    line-height:1.6;
+    padding-bottom:120px;
 }
 
 /* ESCENA FINAL */
-#scene2 {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: black;
-    justify-content: center;
-    align-items: center;
-    font-size: 32px;
-    animation: fadeInScene 3s ease forwards;
+#scene2{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:black;
+    justify-content:center;
+    align-items:center;
+    font-size:32px;
+}
+#scene2 h2{
+    animation:glow 2s infinite alternate;
+}
+@keyframes glow{
+    from{text-shadow:0 0 5px white;}
+    to{text-shadow:0 0 30px white;}
 }
 
-#scene2 h2 {
-    animation: glow 2s ease infinite alternate;
-}
-
-@keyframes fadeInScene {
-    from {opacity: 0;}
-    to {opacity: 1;}
-}
-
-@keyframes glow {
-    from {text-shadow: 0 0 5px white;}
-    to {text-shadow: 0 0 25px white;}
-}
-
-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    pointer-events: none;
+/* CANVAS */
+canvas{
+    position:fixed;
+    top:0;
+    left:0;
+    pointer-events:none;
 }
 </style>
 </head>
@@ -111,6 +114,7 @@ canvas {
 <body>
 
 <canvas id="stars"></canvas>
+<canvas id="hearts"></canvas>
 
 <div id="start">
     <p>✨ Ingresa el código ✨</p>
@@ -121,8 +125,8 @@ canvas {
 </div>
 
 <div id="content">
-    <img src="foto.jpg">
-    <button id="revealBtn" onclick="showText()">Presiona aquí ❤️</button>
+    <img id="mainImage" src="foto.jpg">
+    <button id="revealBtn" onclick="startExperience()">Presiona aquí ❤️</button>
     <div id="text"></div>
 </div>
 
@@ -136,34 +140,61 @@ canvas {
 
 <script>
 
+// 🔧 AJUSTE
+const CORO_TIME = 42;
+
+let audioCtx, analyser, dataArray;
+
+// AUDIO
+function setupAudio(audio){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaElementSource(audio);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 64;
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+}
+
+function getLevel(){
+    if(!analyser) return 0;
+    analyser.getByteFrequencyData(dataArray);
+    let sum=0;
+    for(let i=0;i<dataArray.length;i++) sum+=dataArray[i];
+    return sum/dataArray.length/255;
+}
+
 // PASSWORD
 function checkPass(){
-    if(document.getElementById("pass").value === "2303"){
-        document.getElementById("start").style.display = "none";
-
-        let content = document.getElementById("content");
-        content.style.display = "block";
-
-        setTimeout(()=> content.style.opacity = "1", 50);
-
-        if(navigator.vibrate){
-            navigator.vibrate(100);
-        }
-
+    if(document.getElementById("pass").value==="2303"){
+        document.getElementById("start").style.display="none";
+        let c=document.getElementById("content");
+        c.style.display="block";
+        setTimeout(()=>c.style.opacity="1",50);
     } else {
-        document.getElementById("error").innerText = "Código incorrecto...";
+        document.getElementById("error").innerText="Código incorrecto...";
     }
 }
 
-// TEXTO ANIMADO + AUDIO
-function showText(){
-    document.getElementById("revealBtn").style.display = "none";
-    document.getElementById("text").style.display = "block";
+// START
+function startExperience(){
+    document.getElementById("revealBtn").style.display="none";
+    document.getElementById("text").style.display="block";
 
-    const audio = document.getElementById("music");
+    const audio=document.getElementById("music");
+    audio.currentTime = CORO_TIME - 8;
     audio.play();
 
-    const lines = [
+    setupAudio(audio);
+
+    document.getElementById("mainImage").classList.add("zoom");
+
+    startText();
+}
+
+// TEXTO
+function startText(){
+    const lines=[
         "Eres la calma que rompe mi guerra...",
         "La herida dulce que no quiero cerrar...",
         "Me pierdo en tu voz como en otra tierra…",
@@ -171,80 +202,117 @@ function showText(){
         "Eres fuego y hielo en la misma piel...",
         "Mi paz y mi caos en una canción...",
         "Y aunque amarte a veces no me haga bien...",
-        "prefiero tu tormenta… que un mundo sin tu voz...",
-        "Happy birthday Sweetii 👩🏻‍🚀❤️"
+        "prefiero tu tormenta… que un mundo sin tu voz..."
     ];
 
-    let i = 0;
-    const textContainer = document.getElementById("text");
+    let i=0;
+    const container=document.getElementById("text");
 
     function showLine(){
-        if(i < lines.length){
-            const p = document.createElement("p");
-            p.style.opacity = "0";
-            p.innerHTML = lines[i];
-            textContainer.appendChild(p);
+        if(i<lines.length){
+            let p=document.createElement("p");
+            p.style.opacity="0";
+            p.innerHTML=lines[i];
+            container.appendChild(p);
 
             setTimeout(()=>{
-                p.style.transition = "opacity 1.5s";
-                p.style.opacity = "1";
+                p.style.transition="opacity 1.5s";
+                p.style.opacity="1";
             },100);
 
             i++;
-            setTimeout(showLine, 2500);
+            setTimeout(showLine,2000);
         } else {
             setTimeout(()=>{
-                document.getElementById("scene2").style.display = "flex";
-            }, 2500);
+                document.getElementById("scene2").style.display="flex";
+                spawnHearts();
+            },2000);
         }
     }
-
     showLine();
 }
 
 // ESTRELLAS
-const canvas = document.getElementById("stars");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("stars");
+const ctx=canvas.getContext("2d");
 
-function resizeCanvas(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+function resize(){
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
+    heartsCanvas.width=window.innerWidth;
+    heartsCanvas.height=window.innerHeight;
 }
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener("resize",resize);
 
-let stars = [];
-
+let stars=[];
 for(let i=0;i<120;i++){
-    stars.push({
-        x: Math.random()*canvas.width,
-        y: Math.random()*canvas.height,
-        r: Math.random()*2,
-        speed: 0.3 + Math.random()*0.5
-    });
+    stars.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*2});
 }
 
+// LATIDO + ESTRELLAS
 function drawStars(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
+    let level=getLevel();
 
     stars.forEach(s=>{
         ctx.beginPath();
-        ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-        ctx.fillStyle = "white";
+        ctx.arc(s.x,s.y,s.r+level*3,0,Math.PI*2);
+        ctx.fillStyle="white";
         ctx.fill();
-
-        s.y += s.speed;
-
-        if(s.y > canvas.height){
-            s.y = -5;
-            s.x = Math.random()*canvas.width;
-        }
+        s.y+=0.5+level*2;
+        if(s.y>innerHeight){s.y=0;s.x=Math.random()*innerWidth;}
     });
+
+    // 💓 latido
+    if(level>0.25){
+        document.getElementById("mainImage").classList.add("beat");
+    } else {
+        document.getElementById("mainImage").classList.remove("beat");
+    }
 
     requestAnimationFrame(drawStars);
 }
-
+resize();
 drawStars();
+
+// ❤️ HEARTS
+const heartsCanvas=document.getElementById("hearts");
+const hctx=heartsCanvas.getContext("2d");
+let hearts=[];
+
+function spawnHearts(){
+    for(let i=0;i<30;i++){
+        hearts.push({
+            x:Math.random()*innerWidth,
+            y:innerHeight+20,
+            size:10+Math.random()*10,
+            speed:1+Math.random()*2
+        });
+    }
+}
+
+function drawHearts(){
+    hctx.clearRect(0,0,heartsCanvas.width,heartsCanvas.height);
+
+    hearts.forEach(h=>{
+        hctx.fillStyle="red";
+        hctx.beginPath();
+        hctx.moveTo(h.x, h.y);
+        hctx.bezierCurveTo(h.x+10,h.y-10,h.x+20,h.y+10,h.x,h.y+20);
+        hctx.bezierCurveTo(h.x-20,h.y+10,h.x-10,h.y-10,h.x,h.y);
+        hctx.fill();
+
+        h.y -= h.speed;
+
+        if(h.y<0){
+            h.y=innerHeight;
+            h.x=Math.random()*innerWidth;
+        }
+    });
+
+    requestAnimationFrame(drawHearts);
+}
+drawHearts();
 
 </script>
 
