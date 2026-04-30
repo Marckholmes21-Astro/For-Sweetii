@@ -37,7 +37,7 @@ img {
     box-shadow: 0 0 25px rgba(255,255,255,0.2);
 }
 
-/* BOTÓN LATIDO */
+/* BOTÓN */
 #revealBtn {
     position: fixed;
     bottom: 30px;
@@ -66,21 +66,37 @@ img {
     width: 90%;
     margin-left: auto;
     margin-right: auto;
-    white-space: pre-line;
+    line-height: 1.6;
     padding-bottom: 120px;
 }
 
-/* MENSAJE FINAL */
-#finalMessage {
+/* ESCENA FINAL */
+#scene2 {
     display: none;
-    font-size: 28px;
-    margin-top: 40px;
-    animation: fadeGlow 3s ease forwards;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    animation: fadeInScene 3s ease forwards;
 }
 
-@keyframes fadeGlow {
-    0% {opacity: 0; transform: scale(0.9);}
-    100% {opacity: 1; transform: scale(1); text-shadow: 0 0 15px white;}
+#scene2 h2 {
+    animation: glow 2s ease infinite alternate;
+}
+
+@keyframes fadeInScene {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+@keyframes glow {
+    from {text-shadow: 0 0 5px white;}
+    to {text-shadow: 0 0 25px white;}
 }
 
 canvas {
@@ -108,7 +124,10 @@ canvas {
     <img src="foto.jpg">
     <button id="revealBtn" onclick="showText()">Presiona aquí ❤️</button>
     <div id="text"></div>
-    <div id="finalMessage">I Love you Sweeti 👩🏻‍🚀</div>
+</div>
+
+<div id="scene2">
+    <h2>I Love you Sweeti 👩🏻‍🚀</h2>
 </div>
 
 <audio id="music" loop>
@@ -117,13 +136,14 @@ canvas {
 
 <script>
 
-// PASSWORD + AUDIO
+// PASSWORD
 function checkPass(){
     if(document.getElementById("pass").value === "2303"){
         document.getElementById("start").style.display = "none";
 
         let content = document.getElementById("content");
         content.style.display = "block";
+
         setTimeout(()=> content.style.opacity = "1", 50);
 
         if(navigator.vibrate){
@@ -135,30 +155,51 @@ function checkPass(){
     }
 }
 
-// TEXTO + AUDIO (AQUÍ SE ASEGURA QUE SUENE)
+// TEXTO ANIMADO + AUDIO
 function showText(){
     document.getElementById("revealBtn").style.display = "none";
     document.getElementById("text").style.display = "block";
 
     const audio = document.getElementById("music");
-    audio.play(); // 🔥 aquí sí o sí suena
+    audio.play();
 
-    document.getElementById("text").innerHTML =
-    "Eres la calma que rompe mi guerra...\n\n" +
-    "La herida dulce que no quiero cerrar...\n\n" +
-    "Me pierdo en tu voz como en otra tierra…\n\n" +
-    "donde amar también duele…\n" +
-    "y aun así quiero quedar...\n\n" +
-    "Eres fuego y hielo en la misma piel...\n" +
-    "Mi paz y mi caos en una canción...\n\n" +
-    "Y aunque amarte a veces no me haga bien...\n" +
-    "prefiero tu tormenta…\n\n" +
-    "que un mundo sin tu voz...\n\n" +
-    "Happy birthday Sweetii 👩🏻‍🚀❤️";
+    const lines = [
+        "Eres la calma que rompe mi guerra...",
+        "La herida dulce que no quiero cerrar...",
+        "Me pierdo en tu voz como en otra tierra…",
+        "donde amar también duele… y aun así quiero quedar...",
+        "Eres fuego y hielo en la misma piel...",
+        "Mi paz y mi caos en una canción...",
+        "Y aunque amarte a veces no me haga bien...",
+        "prefiero tu tormenta… que un mundo sin tu voz...",
+        "Happy birthday Sweetii 👩🏻‍🚀❤️"
+    ];
 
-    setTimeout(() => {
-        document.getElementById("finalMessage").style.display = "block";
-    }, 2000);
+    let i = 0;
+    const textContainer = document.getElementById("text");
+
+    function showLine(){
+        if(i < lines.length){
+            const p = document.createElement("p");
+            p.style.opacity = "0";
+            p.innerHTML = lines[i];
+            textContainer.appendChild(p);
+
+            setTimeout(()=>{
+                p.style.transition = "opacity 1.5s";
+                p.style.opacity = "1";
+            },100);
+
+            i++;
+            setTimeout(showLine, 2500);
+        } else {
+            setTimeout(()=>{
+                document.getElementById("scene2").style.display = "flex";
+            }, 2500);
+        }
+    }
+
+    showLine();
 }
 
 // ESTRELLAS
