@@ -20,7 +20,6 @@ body {
     top: 40%;
     width: 100%;
     z-index: 3;
-    animation: fadeIn 2s ease;
 }
 
 /* CONTENIDO */
@@ -53,16 +52,10 @@ img {
     animation: pulse 2s infinite;
 }
 
-/* ANIMACIONES */
 @keyframes pulse {
     0% {transform: translateX(-50%) scale(1);}
     50% {transform: translateX(-50%) scale(1.1);}
     100% {transform: translateX(-50%) scale(1);}
-}
-
-@keyframes fadeIn {
-    from {opacity: 0;}
-    to {opacity: 1;}
 }
 
 /* TEXTO */
@@ -86,20 +79,8 @@ img {
 }
 
 @keyframes fadeGlow {
-    0% {
-        opacity: 0;
-        transform: scale(0.9);
-        text-shadow: 0 0 0px white;
-    }
-    50% {
-        opacity: 1;
-        text-shadow: 0 0 20px white;
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1);
-        text-shadow: 0 0 10px white;
-    }
+    0% {opacity: 0; transform: scale(0.9);}
+    100% {opacity: 1; transform: scale(1); text-shadow: 0 0 15px white;}
 }
 
 canvas {
@@ -136,18 +117,14 @@ canvas {
 
 <script>
 
-// PASSWORD
+// PASSWORD + AUDIO
 function checkPass(){
     if(document.getElementById("pass").value === "2303"){
         document.getElementById("start").style.display = "none";
 
         let content = document.getElementById("content");
         content.style.display = "block";
-
         setTimeout(()=> content.style.opacity = "1", 50);
-
-        document.getElementById("music").play();
-        setupAudio();
 
         if(navigator.vibrate){
             navigator.vibrate(100);
@@ -158,26 +135,13 @@ function checkPass(){
     }
 }
 
-// AUDIO
-let audioCtx, analyser, dataArray;
-
-function setupAudio(){
-    const audio = document.getElementById("music");
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioCtx.createMediaElementSource(audio);
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 64;
-
-    source.connect(analyser);
-    analyser.connect(audioCtx.destination);
-
-    dataArray = new Uint8Array(analyser.frequencyBinCount);
-}
-
-// TEXTO
+// TEXTO + AUDIO (AQUÍ SE ASEGURA QUE SUENE)
 function showText(){
     document.getElementById("revealBtn").style.display = "none";
     document.getElementById("text").style.display = "block";
+
+    const audio = document.getElementById("music");
+    audio.play(); // 🔥 aquí sí o sí suena
 
     document.getElementById("text").innerHTML =
     "Eres la calma que rompe mi guerra...\n\n" +
@@ -219,25 +183,16 @@ for(let i=0;i<120;i++){
     });
 }
 
-function getAudioLevel(){
-    if(!analyser) return 0;
-    analyser.getByteFrequencyData(dataArray);
-    return dataArray.reduce((a,b)=>a+b)/dataArray.length/255;
-}
-
 function drawStars(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    let level = getAudioLevel();
 
     stars.forEach(s=>{
-        let size = s.r + level*2;
-
         ctx.beginPath();
-        ctx.arc(s.x,s.y,size,0,Math.PI*2);
-        ctx.fillStyle = "rgba(255,255,255,"+(0.5+level)+")";
+        ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+        ctx.fillStyle = "white";
         ctx.fill();
 
-        s.y += s.speed + level*2;
+        s.y += s.speed;
 
         if(s.y > canvas.height){
             s.y = -5;
